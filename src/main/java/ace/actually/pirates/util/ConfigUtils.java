@@ -63,6 +63,8 @@ public class ConfigUtils {
 
         defaults.add("#general config for Valkyrien Pirates");
         defaults.add("cannon-firing-pause=40");
+        defaults.add("#The max amount of blocks for the new ship builder, set to -1 to use the Eureka/VS version");
+        defaults.add("max-ship-blocks=5000");
 
         return defaults;
     }

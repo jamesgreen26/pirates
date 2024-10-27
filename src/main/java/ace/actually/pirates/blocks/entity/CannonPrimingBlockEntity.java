@@ -2,6 +2,7 @@ package ace.actually.pirates.blocks.entity;
 
 import ace.actually.pirates.Pirates;
 import ace.actually.pirates.blocks.CannonPrimingBlock;
+import ace.actually.pirates.util.ConfigUtils;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.state.property.Properties;
@@ -16,6 +17,7 @@ public class CannonPrimingBlockEntity extends BlockEntity {
     public int cooldown = 0;
     private int lastCooldown = 40;
     public final double randomRotation;
+    private static int cooldownConfig = -5;
 
 
     public CannonPrimingBlockEntity(BlockPos pos, BlockState state) {
@@ -61,7 +63,11 @@ public class CannonPrimingBlockEntity extends BlockEntity {
     }
 
     public void fire(World world, BlockPos pos, BlockState state) {
-        fire(world, pos, state, 40 + (int) (Math.random() * 20));
+        if(cooldownConfig==-5)
+        {
+            cooldownConfig = Integer.parseInt(ConfigUtils.config.getOrDefault("cannon-firing-pause","40"));
+        }
+        fire(world, pos, state, cooldownConfig + (int) (Math.random() * 20));
     }
 
 

@@ -8,6 +8,7 @@ import ace.actually.pirates.entities.shot.ShotEntity;
 import ace.actually.pirates.entities.pirate_default.PirateEntity;
 import ace.actually.pirates.entities.pirate_skeleton.SkeletonPirateEntity;
 import ace.actually.pirates.sound.ModSounds;
+import ace.actually.pirates.util.ConfigUtils;
 import ace.actually.pirates.util.PatternProcessor;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.gamerule.v1.GameRuleFactory;
@@ -54,6 +55,8 @@ public class Pirates implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+
+		ConfigUtils.checkConfigs();
 		registerEntityThings();
 		//entity types do it themselves
 		registerBlocks();
@@ -61,7 +64,6 @@ public class Pirates implements ModInitializer {
 		//block entities do it themselves
 		//registerDispenserThings();
 		PatternProcessor.setupBasicPatterns();
-		//ConfigUtils.checkConfigs();
 		ModSounds.registerSounds();
 		LOGGER.info("Let there be motion!");
 

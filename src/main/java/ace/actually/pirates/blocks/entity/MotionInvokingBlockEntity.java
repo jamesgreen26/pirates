@@ -1,6 +1,7 @@
 package ace.actually.pirates.blocks.entity;
 
 import ace.actually.pirates.blocks.MotionInvokingBlock;
+import ace.actually.pirates.util.ConfigUtils;
 import ace.actually.pirates.util.PatternProcessor;
 import ace.actually.pirates.Pirates;
 import net.minecraft.block.Block;
@@ -9,6 +10,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -16,6 +18,7 @@ import net.minecraft.world.World;
 import org.valkyrienskies.core.api.ships.LoadedServerShip;
 import org.valkyrienskies.core.util.datastructures.DenseBlockPosSet;
 import org.valkyrienskies.eureka.block.ShipHelmBlock;
+import org.valkyrienskies.eureka.util.ShipAssembler;
 import org.valkyrienskies.mod.api.SeatedControllingPlayer;
 import org.valkyrienskies.mod.common.VSGameUtilsKt;
 import org.valkyrienskies.mod.common.ValkyrienSkiesMod;
@@ -30,6 +33,8 @@ public class MotionInvokingBlockEntity extends BlockEntity {
 
     NbtList instructions = new NbtList();
     long nextInstruction = 0;
+
+    private static int maxShipSizeConfig = -5;
 
     public MotionInvokingBlockEntity(BlockPos pos, BlockState state) {
         super(Pirates.MOTION_INVOKING_BLOCK_ENTITY, pos, state);
@@ -89,8 +94,19 @@ public class MotionInvokingBlockEntity extends BlockEntity {
     }
 
     private void buildShipRec(ServerWorld world, BlockPos pos) {
-        //ShipAssembler.INSTANCE.collectBlocks(world, pos, a -> !a.isAir() && !a.isOf(Blocks.WATER) && !a.isOf(Blocks.KELP) && !a.isOf(Blocks.KELP_PLANT) && !a.isOf(Blocks.SAND) && !a.isIn(BlockTags.ICE) && !a.isOf(Blocks.STONE));
-        collectBlocks(world,pos);
+        if(maxShipSizeConfig ==-5)
+        {
+            maxShipSizeConfig = Integer.parseInt(ConfigUtils.config.getOrDefault("max-ship-blocks","5000"));
+        }
+        if(maxShipSizeConfig ==-1)
+        {
+            ShipAssembler.INSTANCE.collectBlocks(world, pos, a -> !a.isAir() && !a.isOf(Blocks.WATER) && !a.isOf(Blocks.KELP) && !a.isOf(Blocks.KELP_PLANT) && !a.isOf(Blocks.SAND) && !a.isIn(BlockTags.ICE) && !a.isOf(Blocks.STONE));
+        }
+        else
+        {
+            collectBlocks(world,pos);
+        }
+
     }
 
     @Override
@@ -133,7 +149,7 @@ public class MotionInvokingBlockEntity extends BlockEntity {
     public void collectBlocks(ServerWorld world, BlockPos center)
     {
         sortDense(world,center);
-        if(SET.size()<5000)
+        if(SET.size()< maxShipSizeConfig)
         {
             ShipAssemblyKt.createNewShipWithBlocks(center, SET, world);
         }
@@ -143,7 +159,7 @@ public class MotionInvokingBlockEntity extends BlockEntity {
         }
     }
 
-    private static  final List<Block> a = List.of(Blocks.SAND,Blocks.STONE,Blocks.ICE,Blocks.PACKED_ICE,Blocks.BLUE_ICE,Blocks.KELP,Blocks.KELP_PLANT,Blocks.AIR,Blocks.WATER);
+    private static  final List<Block> a = List.of(Blocks.SAND,Blocks.GRAVEL,Blocks.STONE,Blocks.ICE,Blocks.PACKED_ICE,Blocks.BLUE_ICE,Blocks.KELP,Blocks.KELP_PLANT,Blocks.AIR,Blocks.CAVE_AIR,Blocks.VOID_AIR,Blocks.WATER);
     private static final DenseBlockPosSet SET = new DenseBlockPosSet();
 
     public void sortDense(ServerWorld world, BlockPos here)
@@ -151,8 +167,8 @@ public class MotionInvokingBlockEntity extends BlockEntity {
         for (int i = -2; i < 3; i++) {
             for (int j = -2; j < 3; j++) {
                 for (int k = -2; k < 3; k++) {
-                    //this means that we could hit 5000 in this loop, this is considered a false-start
-                    if(SET.getSize()<5000)
+                    //this means that we could hit maxShipSize in this loop, this is considered a false-start
+                    if(SET.getSize()< maxShipSizeConfig)
                     {
                         BlockPos o = here.add(i,j,k);
                         if(!SET.contains(o.getX(),o.getY(),o.getZ()))
@@ -160,11 +176,14 @@ public class MotionInvokingBlockEntity extends BlockEntity {
                             if(!a.contains(world.getBlockState(o).getBlock()))
                             {
                                 SET.add(o.getX(),o.getY(),o.getZ());
-                                //System.out.println(SET.size());
                                 sortDense(world,o);
                             }
 
                         }
+                    }
+                    else
+                    {
+                        Pirates.LOGGER.info("A ship tried to spawn over {} blocks! Disarming...", maxShipSizeConfig);
                     }
 
                 }
