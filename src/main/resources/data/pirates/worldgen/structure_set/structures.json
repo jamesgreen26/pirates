@@ -3,6 +3,10 @@
         {
             "structure": "pirates:ship",
             "weight": 1
+        },
+        {
+            "structure": "pirates:wreck",
+            "weight": 1
         }
     ],
     "placement": {
