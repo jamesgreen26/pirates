@@ -59,7 +59,7 @@ public class CrewSpawnerBlockEntity extends BlockEntity {
         Entity crew = getEntityFromState(world, be);
 
         if (crew != null) {
-            crew.setPosition(be.getPos().toCenterPos());
+            crew.setPosition(be.getPos().toCenterPos().add(0,-0.5,0));
             world.spawnEntity(crew);
         }
 

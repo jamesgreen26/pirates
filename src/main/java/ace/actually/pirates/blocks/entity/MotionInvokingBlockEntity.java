@@ -133,6 +133,7 @@ public class MotionInvokingBlockEntity extends BlockEntity {
     private void utiliseInternalPattern(SeatedControllingPlayer seatedControllingPlayer, MotionInvokingBlockEntity be) {
         String[] instruction = be.instructions.getString(0).split(" ");
 
+        if (seatedControllingPlayer == null) return;
         switch (instruction[0]) {
             case "forward" -> seatedControllingPlayer.setForwardImpulse(Float.parseFloat(instruction[1]));
             case "left" -> seatedControllingPlayer.setLeftImpulse(Float.parseFloat(instruction[1]));

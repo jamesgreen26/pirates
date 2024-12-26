@@ -75,6 +75,7 @@ public class MotionInvokingBlock extends BlockWithEntity {
         if(ship!=null)
         {
             SeatedControllingPlayer seatedControllingPlayer = ship.getAttachment(SeatedControllingPlayer.class);
+            if (seatedControllingPlayer == null) return;
             seatedControllingPlayer.setLeftImpulse(0);
             seatedControllingPlayer.setForwardImpulse(0);
             seatedControllingPlayer.setCruise(false);
