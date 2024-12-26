@@ -7,7 +7,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "projection": "rigid",
-        "location": "pirates:deep-sea-moray",
+        "location": "pirates:ship/deep-sea-moray",
         "processors": "minecraft:empty"
       }
     },
@@ -16,7 +16,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "projection": "rigid",
-        "location": "pirates:barnacle-hopper",
+        "location": "pirates:ship/barnacle-hopper",
         "processors": "minecraft:empty"
       }
     },
@@ -25,7 +25,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "projection": "rigid",
-        "location": "pirates:midnight-barracuda",
+        "location": "pirates:ship/midnight-barracuda",
         "processors": "minecraft:empty"
       }
     },
@@ -34,7 +34,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "projection": "rigid",
-        "location": "pirates:eye-of-horus",
+        "location": "pirates:ship/eye-of-horus",
         "processors": "minecraft:empty"
       }
     },
@@ -43,7 +43,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "projection": "rigid",
-        "location": "pirates:antelope",
+        "location": "pirates:ship/antelope",
         "processors": "minecraft:empty"
       }
     },
@@ -52,7 +52,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "projection": "rigid",
-        "location": "pirates:anetum-contatum",
+        "location": "pirates:ship/anetum-contatum",
         "processors": "minecraft:empty"
       }
     },
@@ -61,7 +61,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "projection": "rigid",
-        "location": "pirates:the-heart-attack",
+        "location": "pirates:ship/the-heart-attack",
         "processors": "minecraft:empty"
       }
     },
@@ -70,7 +70,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "projection": "rigid",
-        "location": "pirates:whydah",
+        "location": "pirates:ship/whydah",
         "processors": "minecraft:empty"
       }
     },
@@ -79,7 +79,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "projection": "rigid",
-        "location": "pirates:whydah_ghost",
+        "location": "pirates:ship/whydah_ghost",
         "processors": "minecraft:empty"
       }
     },
@@ -88,7 +88,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "projection": "rigid",
-        "location": "pirates:revenge",
+        "location": "pirates:ship/revenge",
         "processors": "minecraft:empty"
       }
     },
@@ -97,7 +97,7 @@
       "element": {
         "element_type": "minecraft:single_pool_element",
         "projection": "rigid",
-        "location": "pirates:the-phantom-leviathan",
+        "location": "pirates:ship/the-phantom-leviathan",
         "processors": "minecraft:empty"
       }
     }
