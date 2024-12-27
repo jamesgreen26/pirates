@@ -23,6 +23,7 @@ public class ShipStructurePlacementHelper {
 
     public static void placeShipTemplate(StructureTemplate structureTemplate, ServerWorld world, BlockPos centrePos) {
         shipQueue.add(new Triple<>(structureTemplate, world, centrePos));
+        System.out.println("enqueuing template at " + centrePos.toString());
     }
 
     public static void createShip (StructureTemplate structureTemplate, ServerWorld world, BlockPos blockPos) {
@@ -39,5 +40,11 @@ public class ShipStructurePlacementHelper {
 
         StructurePlacementData structurePlacementData = new StructurePlacementData();
         structureTemplate.place(world, centerPos, centerPos, structurePlacementData, Random.create(), 2);
+
+        System.out.println("new ship id: " + newShip.getId() + " mass: " + newShip.getInertiaData().getMass());
+        if (newShip.getInertiaData().getMass() < 0.1) {
+            System.out.println("deleting ship");
+            VSGameUtilsKt.getShipObjectWorld(world).deleteShip(newShip);
+        }
     }
 }

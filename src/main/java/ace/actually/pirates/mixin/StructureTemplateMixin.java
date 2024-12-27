@@ -16,11 +16,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 
-/*
-*    VS Crumbles compatibility :)
-*/
-
-
 
 @Mixin(value = StructureTemplate.class)
 public abstract class StructureTemplateMixin {
@@ -28,13 +23,6 @@ public abstract class StructureTemplateMixin {
     @Shadow private String author;
 
     @Shadow public abstract void setAuthor(String author);
-
-    @Shadow public abstract boolean place(ServerWorldAccess world, BlockPos pos, BlockPos pivot, StructurePlacementData placementData, Random random, int flags);
-
-    @Shadow
-    protected static BlockBox createBox(BlockPos pos, BlockRotation rotation, BlockPos pivot, BlockMirror mirror, Vec3i dimensions) {
-        return null;
-    }
 
     @Inject(method = "place", at = @At("HEAD"), cancellable = true)
     public void placeMixin(ServerWorldAccess world, BlockPos oldPos, BlockPos pivot, StructurePlacementData placementData, Random random, int flags, CallbackInfoReturnable<Boolean> cir) {
@@ -50,8 +38,11 @@ public abstract class StructureTemplateMixin {
                 placed = false;
                 Pirates.LOGGER.info("Template attempted to generate with null bounding box");
             }
-            this.setAuthor("?");
+            this.setAuthor("dirty");
             cir.setReturnValue(placed);
+            cir.cancel();
+        } else if (this.author.equals("dirty")) {
+            cir.setReturnValue(false);
             cir.cancel();
         }
     }

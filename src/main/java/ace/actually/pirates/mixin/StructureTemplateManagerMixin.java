@@ -11,11 +11,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import java.util.Map;
 import java.util.Optional;
 
-/*
-*    VS Crumbles compatibility :)
-*/
-
-
 @Mixin(value = StructureTemplateManager.class)
 public abstract class StructureTemplateManagerMixin {
 
@@ -31,7 +26,7 @@ public abstract class StructureTemplateManagerMixin {
 
         Optional<StructureTemplate> template = this.templates.computeIfAbsent(id, this::loadTemplate);
 
-        if (template.isPresent() && id.getNamespace().equals("pirates") && id.getPath().startsWith("ship/")) {
+        if (template.isPresent() && !template.get().getAuthor().equals("dirty") && id.getNamespace().equals("pirates") && id.getPath().startsWith("ship/")) {
             template.get().setAuthor("pirate-ship");
         }
 
