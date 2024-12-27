@@ -31,7 +31,7 @@ public class ShipStructurePlacementHelper {
         blacklist.add(blockPos);
 
         ServerShip newShip = VSGameUtilsKt.getShipObjectWorld(world).createNewShipAtBlock(
-                VectorConversionsMCKt.toJOML(blockPos),
+                VectorConversionsMCKt.toJOML(withOceanYLevel(world, blockPos)),
                 false,
                 1.0,
                 VSGameUtilsKt.getDimensionId(world));
@@ -39,7 +39,7 @@ public class ShipStructurePlacementHelper {
         BlockPos centerPos = VectorConversionsMCKt.toBlockPos(newShip.getChunkClaim().getCenterBlockCoordinates(VSGameUtilsKt.getYRange(world), new Vector3i()));
 
         StructurePlacementData structurePlacementData = new StructurePlacementData();
-        boolean success = structureTemplate.place(world, centerPos, centerPos, structurePlacementData, Random.create(), 2);
+        boolean success = structureTemplate.place(world, withOceanYLevel(world, centerPos), centerPos, structurePlacementData, Random.create(), 2);
 
         System.out.println("new ship id: " + newShip.getId() + " mass: " + newShip.getInertiaData().getMass());
         System.out.println("Template claims to have generated successfully? " + success);
@@ -47,5 +47,9 @@ public class ShipStructurePlacementHelper {
             System.out.println("deleting ship");
             VSGameUtilsKt.getShipObjectWorld(world).deleteShip(newShip);
         }
+    }
+
+    private static BlockPos withOceanYLevel(ServerWorld world, BlockPos source) {
+        return new BlockPos(source.getX(), world.getSeaLevel(), source.getZ());
     }
 }
