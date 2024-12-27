@@ -29,30 +29,28 @@ public class ShipStructurePlacementHelper {
 
     public static void createShip (StructureTemplate structureTemplate, ServerWorld world, BlockPos blockPos) {
 
+        ServerShip newShip = VSGameUtilsKt.getShipObjectWorld(world).createNewShipAtBlock(
+                VectorConversionsMCKt.toJOML(withOceanYLevel(world, blockPos)),
+                false,
+                1.0,
+                VSGameUtilsKt.getDimensionId(world));
 
-        new Thread(() -> {
-            ServerShip newShip = VSGameUtilsKt.getShipObjectWorld(world).createNewShipAtBlock(
-                    VectorConversionsMCKt.toJOML(withOceanYLevel(world, blockPos)),
-                    false,
-                    1.0,
-                    VSGameUtilsKt.getDimensionId(world));
+        newShip.setStatic(true);
 
-            newShip.setStatic(true);
+        BlockPos centerPos = VectorConversionsMCKt.toBlockPos(newShip.getChunkClaim().getCenterBlockCoordinates(VSGameUtilsKt.getYRange(world), new Vector3i()));
 
-            BlockPos centerPos = VectorConversionsMCKt.toBlockPos(newShip.getChunkClaim().getCenterBlockCoordinates(VSGameUtilsKt.getYRange(world), new Vector3i()));
+        StructurePlacementData structurePlacementData = new StructurePlacementData();
+        boolean success = structureTemplate.place(world, withOceanYLevel(world, centerPos), centerPos, structurePlacementData, Random.create(), 2);
 
-            StructurePlacementData structurePlacementData = new StructurePlacementData();
-            boolean success = structureTemplate.place(world, withOceanYLevel(world, centerPos), centerPos, structurePlacementData, Random.create(), 2);
+        System.out.println("new ship id: " + newShip.getId() + " mass: " + newShip.getInertiaData().getMass());
+        System.out.println("Template claims to have generated successfully? " + success);
+        if (newShip.getInertiaData().getMass() < 0.1) {
+            System.out.println("deleting ship");
+            VSGameUtilsKt.getShipObjectWorld(world).deleteShip(newShip);
+        } else {
+            newShip.setStatic(false);
+        }
 
-            System.out.println("new ship id: " + newShip.getId() + " mass: " + newShip.getInertiaData().getMass());
-            System.out.println("Template claims to have generated successfully? " + success);
-            if (newShip.getInertiaData().getMass() < 0.1) {
-                System.out.println("deleting ship");
-                VSGameUtilsKt.getShipObjectWorld(world).deleteShip(newShip);
-            } else {
-                newShip.setStatic(false);
-            }
-        }).start();
     }
 
     private static BlockPos withOceanYLevel(ServerWorld world, BlockPos source) {
