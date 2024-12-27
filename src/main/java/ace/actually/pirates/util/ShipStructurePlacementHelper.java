@@ -33,7 +33,7 @@ public class ShipStructurePlacementHelper {
 
 
 
-        Thread.startVirtualThread(() -> {
+        new Thread(() -> {
             ServerShip newShip = VSGameUtilsKt.getShipObjectWorld(world).createNewShipAtBlock(
                     VectorConversionsMCKt.toJOML(withOceanYLevel(world, blockPos)),
                     false,
@@ -55,7 +55,7 @@ public class ShipStructurePlacementHelper {
             } else {
                 newShip.setStatic(false);
             }
-        });
+        }).start();
     }
 
     private static BlockPos withOceanYLevel(ServerWorld world, BlockPos source) {
