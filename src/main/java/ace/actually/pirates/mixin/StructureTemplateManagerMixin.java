@@ -1,5 +1,6 @@
 package ace.actually.pirates.mixin;
 
+import ace.actually.pirates.util.CanRemoveTemplate;
 import net.minecraft.structure.StructureTemplate;
 import net.minecraft.structure.StructureTemplateManager;
 import net.minecraft.util.Identifier;
@@ -12,7 +13,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Mixin(value = StructureTemplateManager.class)
-public abstract class StructureTemplateManagerMixin {
+public abstract class StructureTemplateManagerMixin implements CanRemoveTemplate {
 
     @Final
     @Shadow
@@ -20,6 +21,8 @@ public abstract class StructureTemplateManagerMixin {
 
     @Shadow
     protected abstract Optional<StructureTemplate> loadTemplate(Identifier identifier);
+
+    @Shadow public abstract void unloadTemplate(Identifier id);
 
     @Inject(method = "getTemplate", at = @At("HEAD"), cancellable = true)
     public void getTemplateMixin(Identifier id, CallbackInfoReturnable<Optional<StructureTemplate>> cir) {
@@ -33,6 +36,14 @@ public abstract class StructureTemplateManagerMixin {
         cir.setReturnValue(template);
     }
 
+    @Override
+    public boolean pirates$unload(StructureTemplate template) {
+        Optional<Identifier> key = templates.entrySet().stream()
+                .filter(entry -> entry.getValue().isPresent() && entry.getValue().get().equals(template))
+                .map(Map.Entry::getKey)
+                .findFirst();
 
-
+        key.ifPresent(this::unloadTemplate);
+        return key.isPresent();
+    }
 }

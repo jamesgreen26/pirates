@@ -1,10 +1,12 @@
 package ace.actually.pirates.util;
 
+import ace.actually.pirates.Pirates;
 import kotlin.Triple;
 
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructurePlacementData;
 import net.minecraft.structure.StructureTemplate;
+import net.minecraft.structure.StructureTemplateManager;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.random.Random;
 import org.joml.Vector3i;
@@ -24,7 +26,7 @@ public class ShipStructurePlacementHelper {
 
     public static void placeShipTemplate(StructureTemplate structureTemplate, ServerWorld world, BlockPos centrePos) {
         shipQueue.add(new Triple<>(structureTemplate, world, centrePos));
-        System.out.println("enqueuing template at " + centrePos.toString());
+        Pirates.LOGGER.info("enqueuing template at {}", centrePos.toString());
     }
 
     public static void createShip (StructureTemplate structureTemplate, ServerWorld world, BlockPos blockPos) {
@@ -42,12 +44,20 @@ public class ShipStructurePlacementHelper {
         StructurePlacementData structurePlacementData = new StructurePlacementData();
         boolean success = structureTemplate.place(world, withOceanYLevel(world, centerPos), centerPos, structurePlacementData, Random.create(), 2);
 
-        System.out.println("new ship id: " + newShip.getId() + " mass: " + newShip.getInertiaData().getMass());
-        System.out.println("Template claims to have generated successfully? " + success);
+        Pirates.LOGGER.info("new ship id: {} mass: {}", newShip.getId(), newShip.getInertiaData().getMass());
+        Pirates.LOGGER.info("Template claims to have generated successfully? {}", success);
         if (newShip.getInertiaData().getMass() < 0.1) {
             System.out.println("deleting ship");
             VSGameUtilsKt.getShipObjectWorld(world).deleteShip(newShip);
         } else {
+            Pirates.LOGGER.info("ship created successfully.");
+            StructureTemplateManager manager = Objects.requireNonNull(world.getServer()).getStructureTemplateManager();
+            if(((CanRemoveTemplate) manager).pirates$unload(structureTemplate)) {
+                Pirates.LOGGER.info("templates cleaned.");
+            } else {
+                Pirates.LOGGER.info("template cleanup failed.");
+            }
+
             newShip.setStatic(false);
         }
 
