@@ -13,11 +13,12 @@ import org.valkyrienskies.mod.common.VSGameUtilsKt;
 import org.valkyrienskies.mod.common.util.VectorConversionsMCKt;
 
 import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.SynchronousQueue;
 
 public class ShipStructurePlacementHelper {
 
-    public static final Queue<Triple<StructureTemplate, ServerWorld, BlockPos>> shipQueue = new ArrayDeque<>();
+    public static final Queue<Triple<StructureTemplate, ServerWorld, BlockPos>> shipQueue = new ArrayBlockingQueue<>(12,false);
 
     private static final Set<BlockPos> blacklist = new HashSet<>();
 
@@ -30,23 +31,31 @@ public class ShipStructurePlacementHelper {
         if (blacklist.contains(blockPos)) return;
         blacklist.add(blockPos);
 
-        ServerShip newShip = VSGameUtilsKt.getShipObjectWorld(world).createNewShipAtBlock(
-                VectorConversionsMCKt.toJOML(withOceanYLevel(world, blockPos)),
-                false,
-                1.0,
-                VSGameUtilsKt.getDimensionId(world));
 
-        BlockPos centerPos = VectorConversionsMCKt.toBlockPos(newShip.getChunkClaim().getCenterBlockCoordinates(VSGameUtilsKt.getYRange(world), new Vector3i()));
 
-        StructurePlacementData structurePlacementData = new StructurePlacementData();
-        boolean success = structureTemplate.place(world, withOceanYLevel(world, centerPos), centerPos, structurePlacementData, Random.create(), 2);
+        Thread.startVirtualThread(() -> {
+            ServerShip newShip = VSGameUtilsKt.getShipObjectWorld(world).createNewShipAtBlock(
+                    VectorConversionsMCKt.toJOML(withOceanYLevel(world, blockPos)),
+                    false,
+                    1.0,
+                    VSGameUtilsKt.getDimensionId(world));
 
-        System.out.println("new ship id: " + newShip.getId() + " mass: " + newShip.getInertiaData().getMass());
-        System.out.println("Template claims to have generated successfully? " + success);
-        if (newShip.getInertiaData().getMass() < 0.1) {
-            System.out.println("deleting ship");
-            VSGameUtilsKt.getShipObjectWorld(world).deleteShip(newShip);
-        }
+            newShip.setStatic(true);
+
+            BlockPos centerPos = VectorConversionsMCKt.toBlockPos(newShip.getChunkClaim().getCenterBlockCoordinates(VSGameUtilsKt.getYRange(world), new Vector3i()));
+
+            StructurePlacementData structurePlacementData = new StructurePlacementData();
+            boolean success = structureTemplate.place(world, withOceanYLevel(world, centerPos), centerPos, structurePlacementData, Random.create(), 2);
+
+            System.out.println("new ship id: " + newShip.getId() + " mass: " + newShip.getInertiaData().getMass());
+            System.out.println("Template claims to have generated successfully? " + success);
+            if (newShip.getInertiaData().getMass() < 0.1) {
+                System.out.println("deleting ship");
+                VSGameUtilsKt.getShipObjectWorld(world).deleteShip(newShip);
+            } else {
+                newShip.setStatic(false);
+            }
+        });
     }
 
     private static BlockPos withOceanYLevel(ServerWorld world, BlockPos source) {
