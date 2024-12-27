@@ -6,6 +6,7 @@ import net.minecraft.util.Identifier;
 import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.Map;
 import java.util.Optional;
@@ -25,14 +26,8 @@ public abstract class StructureTemplateManagerMixin {
     @Shadow
     protected abstract Optional<StructureTemplate> loadTemplate(Identifier identifier);
 
-    /**
-     * @author
-     * G_Mungus
-     * @reason
-     * Easier than inject
-     */
-    @Overwrite
-    public Optional<StructureTemplate> getTemplate(Identifier id) {
+    @Inject(method = "getTemplate", at = @At("HEAD"), cancellable = true)
+    public void getTemplateMixin(Identifier id, CallbackInfoReturnable<Optional<StructureTemplate>> cir) {
 
         Optional<StructureTemplate> template = this.templates.computeIfAbsent(id, this::loadTemplate);
 
@@ -40,7 +35,7 @@ public abstract class StructureTemplateManagerMixin {
             template.get().setAuthor("pirate-ship");
         }
 
-        return template;
+        cir.setReturnValue(template);
     }
 
 

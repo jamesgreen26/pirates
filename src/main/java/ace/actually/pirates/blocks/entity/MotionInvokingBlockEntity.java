@@ -87,7 +87,7 @@ public class MotionInvokingBlockEntity extends BlockEntity {
 
                 }
             } else {
-                be.buildShipRec((ServerWorld) world, pos);
+                //be.buildShipRec((ServerWorld) world, pos);
             }
         }
 
