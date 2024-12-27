@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-
+import org.valkyrienskies.mod.common.VSGameUtilsKt;
 
 
 @Mixin(value = StructureTemplate.class)
@@ -25,7 +25,9 @@ public abstract class StructureTemplateMixin {
     @Shadow public abstract void setAuthor(String author);
 
     @Inject(method = "place", at = @At("HEAD"), cancellable = true)
-    public void placeMixin(ServerWorldAccess world, BlockPos oldPos, BlockPos pivot, StructurePlacementData placementData, Random random, int flags, CallbackInfoReturnable<Boolean> cir) {
+    public void placeMixin(ServerWorldAccess world, BlockPos pos, BlockPos pivot, StructurePlacementData placementData, Random random, int flags, CallbackInfoReturnable<Boolean> cir) {
+        if (VSGameUtilsKt.isBlockInShipyard(world.toServerWorld(), pos)) return;
+
         boolean placed;
         if (this.author.equals("pirate-ship")) {
             if (placementData.getBoundingBox() != null) {
@@ -35,8 +37,12 @@ public abstract class StructureTemplateMixin {
                         placementData.getBoundingBox().getCenter());
                 placed = true;
             } else {
-                placed = false;
-                Pirates.LOGGER.info("Template attempted to generate with null bounding box");
+                ShipStructurePlacementHelper.placeShipTemplate(
+                        (StructureTemplate) (Object) this,
+                        world.toServerWorld(),
+                        pos);
+                Pirates.LOGGER.info("Template generated with null bounding box");
+                placed = true;
             }
             this.setAuthor("dirty");
             cir.setReturnValue(placed);
