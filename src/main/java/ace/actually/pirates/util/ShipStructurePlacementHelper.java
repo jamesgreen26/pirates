@@ -39,9 +39,10 @@ public class ShipStructurePlacementHelper {
         BlockPos centerPos = VectorConversionsMCKt.toBlockPos(newShip.getChunkClaim().getCenterBlockCoordinates(VSGameUtilsKt.getYRange(world), new Vector3i()));
 
         StructurePlacementData structurePlacementData = new StructurePlacementData();
-        structureTemplate.place(world, centerPos, centerPos, structurePlacementData, Random.create(), 2);
+        boolean success = structureTemplate.place(world, centerPos, centerPos, structurePlacementData, Random.create(), 2);
 
         System.out.println("new ship id: " + newShip.getId() + " mass: " + newShip.getInertiaData().getMass());
+        System.out.println("Template claims to have generated successfully? " + success);
         if (newShip.getInertiaData().getMass() < 0.1) {
             System.out.println("deleting ship");
             VSGameUtilsKt.getShipObjectWorld(world).deleteShip(newShip);
