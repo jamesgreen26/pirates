@@ -1,8 +1,10 @@
 package ace.actually.pirates.blocks.entity;
 
 import ace.actually.pirates.Pirates;
+import ace.actually.pirates.entities.pirate_abstract.AbstractPirateEntity;
 import ace.actually.pirates.entities.pirate_default.PirateEntity;
 import ace.actually.pirates.entities.pirate_skeleton.SkeletonPirateEntity;
+import ace.actually.pirates.events.IPirateSpawns;
 import ace.actually.pirates.util.CrewSpawnType;
 import ace.actually.pirates.util.CrewTypes;
 import net.minecraft.block.BlockState;
@@ -60,6 +62,11 @@ public class CrewSpawnerBlockEntity extends BlockEntity {
         if (crew != null) {
             crew.setPosition(be.getPos().toCenterPos().add(0,-0.5,0));
             world.spawnEntity(crew);
+            if(crew instanceof AbstractPirateEntity ape)
+            {
+                IPirateSpawns.EVENT.invoker().interact(ape);
+            }
+
         }
 
         world.breakBlock(be.getPos(), false);

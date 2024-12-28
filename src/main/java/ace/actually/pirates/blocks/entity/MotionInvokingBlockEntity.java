@@ -12,18 +12,30 @@ import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
+import org.joml.Quaterniondc;
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
+import org.joml.Vector3i;
 import org.valkyrienskies.core.api.ships.LoadedServerShip;
+import org.valkyrienskies.core.api.ships.ServerShip;
+import org.valkyrienskies.core.api.ships.Ship;
 import org.valkyrienskies.core.util.datastructures.DenseBlockPosSet;
 import org.valkyrienskies.eureka.block.ShipHelmBlock;
+import org.valkyrienskies.eureka.ship.EurekaShipControl;
 import org.valkyrienskies.eureka.util.ShipAssembler;
 import org.valkyrienskies.mod.api.SeatedControllingPlayer;
 import org.valkyrienskies.mod.common.VSGameUtilsKt;
 import org.valkyrienskies.mod.common.ValkyrienSkiesMod;
 import org.valkyrienskies.mod.common.assembly.ShipAssemblyKt;
 import org.valkyrienskies.mod.common.util.DimensionIdProvider;
+import org.valkyrienskies.mod.common.util.GameTickForceApplier;
+import org.valkyrienskies.mod.common.util.VectorConversionsMCKt;
+import org.valkyrienskies.mod.util.RelocationUtilKt;
 
 import java.util.List;
 
@@ -33,8 +45,7 @@ public class MotionInvokingBlockEntity extends BlockEntity {
 
     NbtList instructions = new NbtList();
     long nextInstruction = 0;
-
-    private static int maxShipSizeConfig = -5;
+    private static int updateTicks = -1;
 
     public MotionInvokingBlockEntity(BlockPos pos, BlockState state) {
         super(Pirates.MOTION_INVOKING_BLOCK_ENTITY, pos, state);
@@ -44,6 +55,10 @@ public class MotionInvokingBlockEntity extends BlockEntity {
 
         if (!(world.getBlockState(pos.up()).getBlock() instanceof ShipHelmBlock)) {
             return;
+        }
+        if(updateTicks==-1)
+        {
+            updateTicks = Integer.parseInt(ConfigUtils.config.getOrDefault("controlled-ship-updates","100"));
         }
 
         if (be.instructions.isEmpty() && world.getGameRules().getBoolean(Pirates.PIRATES_IS_LIVE_WORLD)) {
@@ -80,31 +95,30 @@ public class MotionInvokingBlockEntity extends BlockEntity {
                         ship.setAttachment(SeatedControllingPlayer.class, seatedControllingPlayer);
                     }
 
-                    //this is the bit where it does things, theoretically you can derive some AI from this
-                    //good luck tho
+
                     //Pirates.LOGGER.info(be.instructions.getString(0));
-                    be.utiliseInternalPattern(seatedControllingPlayer, be);
+                    //be.utiliseInternalPattern(seatedControllingPlayer, be);
+                    //be.moveShipForward(ship);
+                    if(world.getTimeOfDay()%updateTicks==0)
+                    {
+                        List<Ship> ships = VSGameUtilsKt.getAllShips(world).stream().filter(a->
+                        {
+                            if(a.getId()==ship.getId()) return false;
+                            Vector3dc f1 = ship.getTransform().getPositionInWorld();
+                            Vector3dc f2 = a.getTransform().getPositionInWorld();
+                            return f1.distanceSquared(f2)<10000;
+                        }).toList();
+                        if(!ships.isEmpty())
+                        {
+                            Vector3dc o = ships.get(0).getTransform().getPositionInWorld();
+                            be.setTarget(new int[]{(int) o.x(), (int) o.y(), (int) o.z()});
+                        }
+                    }
+
+                    be.moveTowards(seatedControllingPlayer,ship);
 
                 }
-            } else {
-                //be.buildShipRec((ServerWorld) world, pos);
             }
-        }
-
-    }
-
-    private void buildShipRec(ServerWorld world, BlockPos pos) {
-        if(maxShipSizeConfig ==-5)
-        {
-            maxShipSizeConfig = Integer.parseInt(ConfigUtils.config.getOrDefault("max-ship-blocks","5000"));
-        }
-        if(maxShipSizeConfig ==-1)
-        {
-            ShipAssembler.INSTANCE.collectBlocks(world, pos, a -> !a.isAir() && !a.isOf(Blocks.WATER) && !a.isOf(Blocks.KELP) && !a.isOf(Blocks.KELP_PLANT) && !a.isOf(Blocks.SAND) && !a.isIn(BlockTags.ICE) && !a.isOf(Blocks.STONE));
-        }
-        else
-        {
-            collectBlocks(world,pos);
         }
 
     }
@@ -113,6 +127,7 @@ public class MotionInvokingBlockEntity extends BlockEntity {
     protected void writeNbt(NbtCompound nbt) {
         nbt.putLong("nextInstruction", nextInstruction);
         nbt.put("instructions", instructions);
+        nbt.putIntArray("target",target);
         super.writeNbt(nbt);
     }
 
@@ -121,6 +136,11 @@ public class MotionInvokingBlockEntity extends BlockEntity {
         super.readNbt(nbt);
         instructions = (NbtList) nbt.get("instructions");
         nextInstruction = nbt.getLong("nextInstruction");
+        if(nbt.contains("target"))
+        {
+            target = nbt.getIntArray("target");
+        }
+
     }
 
 
@@ -128,6 +148,77 @@ public class MotionInvokingBlockEntity extends BlockEntity {
         instructions = PatternProcessor.loadPattern(loc);
         nextInstruction = world.getTime() + 10;
         markDirty();
+    }
+
+    public void setTarget(int[] target) {
+        this.target = target;
+        markDirty();
+    }
+
+    int[] target = new int[3];
+    double ldx = -1;
+    double ldz = -1;
+    int flipflop = 1;
+
+    private void moveTowards(SeatedControllingPlayer power, LoadedServerShip ship)
+    {
+        if(target.length!=3) return;
+
+        power.setForwardImpulse(1);
+        Vector3dc v3d = ship.getTransform().getPositionInWorld();
+        if(ldx==-1)
+        {
+            //lastDistance = v3d.distanceSquared(target[0],target[1],target[2]);
+            ldx = vdis(target[0],v3d.x());
+            ldz = vdis(target[2],v3d.z());
+        }
+        else
+        {
+            //double currentDistance = v3d.distanceSquared(target[0],target[1],target[2]);
+            double cdx = vdis(target[0],v3d.x());
+            double cdz = vdis(target[2],v3d.z());
+            //System.out.println(lastDistance+" -> "+currentDistance);
+            if(cdx>=ldx || cdz>=ldz)
+            {
+                power.setLeftImpulse(flipflop);
+
+            }
+            else
+            {
+                power.setLeftImpulse(0);
+                flipflop = -flipflop;
+            }
+            ldx=cdx;
+            ldz=cdz;
+        }
+
+    }
+
+    private double vdis(double x, double xto)
+    {
+        if(x>xto)
+        {
+            return  x-xto;
+        }
+        else
+        {
+            return xto-x;
+        }
+    }
+
+    private void moveShipForward(LoadedServerShip ship)
+    {
+        double mass = ship.getInertiaData().getMass();
+        Vector3d qdc = ship.getTransform().getShipToWorldRotation().getEulerAnglesZXY(new Vector3d()).mul(mass*100);
+        qdc = new Vector3d(qdc.x,0,qdc.z);
+        //qdc = qdc.rotateY(-Math.PI);
+        GameTickForceApplier gtfa = ship.getAttachment(GameTickForceApplier.class);
+        if(gtfa!=null)
+        {
+            Vector3d loc = new Vector3d(pos.getX()-1,pos.getY()+0.3,pos.getZ()-1).sub(ship.getTransform().getPositionInShip());
+            gtfa.applyInvariantForceToPos(qdc,loc);
+            //gtfa.applyInvariantForce(qdc);
+        }
     }
 
     private void utiliseInternalPattern(SeatedControllingPlayer seatedControllingPlayer, MotionInvokingBlockEntity be) {
@@ -142,55 +233,10 @@ public class MotionInvokingBlockEntity extends BlockEntity {
             case "up" -> seatedControllingPlayer.setUpImpulse(Float.parseFloat(instruction[1]));
             case "down" -> seatedControllingPlayer.setUpImpulse(-Float.parseFloat(instruction[1]));
         }
+
         be.nextInstruction = world.getTime() + Long.parseLong(instruction[2]);
         be.instructions.add(be.instructions.remove(0));
         be.markDirty();
-    }
-
-    public void collectBlocks(ServerWorld world, BlockPos center)
-    {
-        sortDense(world,center);
-        if(SET.size()< maxShipSizeConfig)
-        {
-            ShipAssemblyKt.createNewShipWithBlocks(center, SET, world);
-        }
-        else
-        {
-            MotionInvokingBlock.disarm(world,getPos());
-        }
-    }
-
-    private static  final List<Block> a = List.of(Blocks.SAND,Blocks.GRAVEL,Blocks.STONE,Blocks.ICE,Blocks.PACKED_ICE,Blocks.BLUE_ICE,Blocks.KELP,Blocks.KELP_PLANT,Blocks.AIR,Blocks.CAVE_AIR,Blocks.VOID_AIR,Blocks.WATER);
-    private static final DenseBlockPosSet SET = new DenseBlockPosSet();
-
-    public void sortDense(ServerWorld world, BlockPos here)
-    {
-        for (int i = -2; i < 3; i++) {
-            for (int j = -2; j < 3; j++) {
-                for (int k = -2; k < 3; k++) {
-                    //this means that we could hit maxShipSize in this loop, this is considered a false-start
-                    if(SET.getSize()< maxShipSizeConfig)
-                    {
-                        BlockPos o = here.add(i,j,k);
-                        if(!SET.contains(o.getX(),o.getY(),o.getZ()))
-                        {
-                            if(!a.contains(world.getBlockState(o).getBlock()))
-                            {
-                                SET.add(o.getX(),o.getY(),o.getZ());
-                                sortDense(world,o);
-                            }
-
-                        }
-                    }
-                    else
-                    {
-                        Pirates.LOGGER.info("A ship tried to spawn over {} blocks! Disarming...", maxShipSizeConfig);
-                    }
-
-                }
-            }
-        }
-
     }
 
 }

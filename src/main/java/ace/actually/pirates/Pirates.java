@@ -7,6 +7,8 @@ import ace.actually.pirates.blocks.entity.MotionInvokingBlockEntity;
 import ace.actually.pirates.entities.shot.ShotEntity;
 import ace.actually.pirates.entities.pirate_default.PirateEntity;
 import ace.actually.pirates.entities.pirate_skeleton.SkeletonPirateEntity;
+import ace.actually.pirates.events.IPirateDies;
+import ace.actually.pirates.items.ShipPointer;
 import ace.actually.pirates.sound.ModSounds;
 import ace.actually.pirates.util.ConfigUtils;
 import ace.actually.pirates.util.PatternProcessor;
@@ -30,9 +32,9 @@ import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.sound.BlockSoundGroup;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
 import org.slf4j.Logger;
@@ -79,6 +81,12 @@ public class Pirates implements ModInitializer {
 			itemGroup.add(Pirates.MOTION_INVOKING_BLOCK.asItem());
 		});
 
+		IPirateDies.EVENT.register((player, pirate) ->
+		{
+			System.out.println(pirate.getUuidAsString());
+			return ActionResult.PASS;
+		});
+
 
 	}
 
@@ -110,10 +118,12 @@ public class Pirates implements ModInitializer {
 
 	public static final Item CANNONBALL = new Item(new Item.Settings());
 	public static final Item CANNONBALL_ENT = new Item(new Item.Settings());
+	public static final ShipPointer SHIP_POINTER = new ShipPointer(new Item.Settings());
 	private void registerItems()
 	{
 		Registry.register(Registries.ITEM,new Identifier("pirates","cannonball"),CANNONBALL);
 		Registry.register(Registries.ITEM,new Identifier("util_pirates","util_1"),CANNONBALL_ENT);
+		Registry.register(Registries.ITEM,new Identifier("pirates","ship_pointer"),SHIP_POINTER);
 
 		Registry.register(Registries.ITEM,new Identifier("pirates","cannon_priming_block"),new BlockItem(CANNON_PRIMING_BLOCK,new Item.Settings()));
 
@@ -147,6 +157,7 @@ public class Pirates implements ModInitializer {
 	public static final EntityType<PirateEntity> PIRATE_ENTITY_TYPE =registerEntity("pirate",SpawnGroup.MISC,EntityDimensions.changing(0.6f,1.9f),((type, world) -> new PirateEntity(world)));
 
 	public static final EntityType<SkeletonPirateEntity> SKELETON_PIRATE_ENTITY_TYPE =registerEntity("skeleton_pirate",SpawnGroup.MISC,EntityDimensions.changing(0.6f,1.9f),((type, world) -> new SkeletonPirateEntity(world)));
+
 
 
 	public static <T extends Entity> EntityType<T> registerEntity(String name, SpawnGroup category, EntityDimensions size, EntityType.EntityFactory<T> factory) {

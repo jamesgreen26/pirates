@@ -65,6 +65,8 @@ public class ConfigUtils {
         defaults.add("cannon-firing-pause=40");
         defaults.add("#The max amount of blocks for the new ship builder, set to -1 to use the Eureka/VS version");
         defaults.add("max-ship-blocks=-1");
+        defaults.add("#how many ticks should it take for an NPC controlled ship to change its target position, default 50");
+        defaults.add("controlled-ship-updates=100");
 
         return defaults;
     }
