@@ -1,4 +1,4 @@
-package ace.actually.pirates.util;
+package ace.actually.pirates.structures;
 
 import ace.actually.pirates.Pirates;
 import kotlin.Triple;
@@ -22,6 +22,8 @@ public class ShipStructurePlacementHelper {
 
     public static final Queue<Triple<StructureTemplate, ServerWorld, BlockPos>> shipQueue = new ArrayBlockingQueue<>(12,false);
 
+    private static final Set<BlockPos> blacklist = new HashSet<>();
+
 
 
     public static void placeShipTemplate(StructureTemplate structureTemplate, ServerWorld world, BlockPos centrePos) {
@@ -30,9 +32,12 @@ public class ShipStructurePlacementHelper {
     }
 
     public static void createShip (StructureTemplate structureTemplate, ServerWorld world, BlockPos blockPos) {
+        if (blacklist.contains(blockPos)) return;
+        blacklist.add(blockPos);
+
 
         ServerShip newShip = VSGameUtilsKt.getShipObjectWorld(world).createNewShipAtBlock(
-                VectorConversionsMCKt.toJOML(withOceanYLevel(world, blockPos)),
+                VectorConversionsMCKt.toJOML(withOceanYLevel(world, blockPos).up(structureTemplate.getSize().getY()/7)),
                 false,
                 1.0,
                 VSGameUtilsKt.getDimensionId(world));
@@ -42,7 +47,8 @@ public class ShipStructurePlacementHelper {
         BlockPos centerPos = VectorConversionsMCKt.toBlockPos(newShip.getChunkClaim().getCenterBlockCoordinates(VSGameUtilsKt.getYRange(world), new Vector3i()));
 
         StructurePlacementData structurePlacementData = new StructurePlacementData();
-        boolean success = structureTemplate.place(world, withOceanYLevel(world, centerPos), centerPos, structurePlacementData, Random.create(), 2);
+        structurePlacementData.setPosition(centerPos);
+        boolean success = structureTemplate.place(world, centerPos, centerPos, structurePlacementData, Random.create(), 2);
 
         Pirates.LOGGER.info("new ship id: {} mass: {}", newShip.getId(), newShip.getInertiaData().getMass());
         Pirates.LOGGER.info("Template claims to have generated successfully? {}", success);
