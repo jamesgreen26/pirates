@@ -26,24 +26,14 @@ public abstract class StructureTemplateMixin {
     public void placeMixin(ServerWorldAccess world, BlockPos pos, BlockPos pivot, StructurePlacementData placementData, Random random, int flags, CallbackInfoReturnable<Boolean> cir) {
         if (VSGameUtilsKt.isBlockInShipyard(world.toServerWorld(), pos)) return;
 
-        boolean placed;
         if (this.author.equals("pirate-ship")) {
-            if (placementData.getBoundingBox() != null) {
-                ShipStructurePlacementHelper.placeShipTemplate(
-                        (StructureTemplate) (Object) this,
-                        world.toServerWorld(),
-                        placementData.getBoundingBox().getCenter());
-                placed = true;
-            } else {
-                ShipStructurePlacementHelper.placeShipTemplate(
-                        (StructureTemplate) (Object) this,
-                        world.toServerWorld(),
-                        pos);
-                Pirates.LOGGER.info("Template generated with null bounding box");
-                placed = true;
-            }
+            ShipStructurePlacementHelper.placeShipTemplate(
+                    (StructureTemplate) (Object) this,
+                    world.toServerWorld(),
+                    pos);
+
             this.setAuthor("dirty");
-            cir.setReturnValue(placed);
+            cir.setReturnValue(true);
             cir.cancel();
         } else if (this.author.equals("dirty")) {
             cir.setReturnValue(false);
