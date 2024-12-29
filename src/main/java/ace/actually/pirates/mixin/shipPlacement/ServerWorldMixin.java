@@ -1,4 +1,4 @@
-package ace.actually.pirates.mixin;
+package ace.actually.pirates.mixin.shipPlacement;
 
 import ace.actually.pirates.structures.ShipStructurePlacementHelper;
 import kotlin.Triple;

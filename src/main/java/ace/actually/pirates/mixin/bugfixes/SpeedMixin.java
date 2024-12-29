@@ -1,6 +1,5 @@
-package ace.actually.pirates.mixin;
+package ace.actually.pirates.mixin.bugfixes;
 
-import ace.actually.pirates.Pirates;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.Vec3d;
 import org.spongepowered.asm.mixin.Mixin;
