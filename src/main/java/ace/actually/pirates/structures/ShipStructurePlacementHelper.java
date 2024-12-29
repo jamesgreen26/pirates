@@ -1,4 +1,4 @@
-package ace.actually.pirates.util;
+package ace.actually.pirates.structures;
 
 import ace.actually.pirates.Pirates;
 import kotlin.Triple;

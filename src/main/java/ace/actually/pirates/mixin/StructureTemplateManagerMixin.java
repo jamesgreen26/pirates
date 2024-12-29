@@ -1,6 +1,6 @@
 package ace.actually.pirates.mixin;
 
-import ace.actually.pirates.util.CanRemoveTemplate;
+import ace.actually.pirates.structures.CanRemoveTemplate;
 import net.minecraft.structure.StructureTemplate;
 import net.minecraft.structure.StructureTemplateManager;
 import net.minecraft.util.Identifier;

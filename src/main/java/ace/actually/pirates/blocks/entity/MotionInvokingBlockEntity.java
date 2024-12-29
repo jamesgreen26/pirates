@@ -42,14 +42,20 @@ import java.util.List;
 import static net.minecraft.state.property.Properties.HORIZONTAL_FACING;
 
 public class MotionInvokingBlockEntity extends BlockEntity {
-
     NbtList instructions = new NbtList();
     long nextInstruction = 0;
+
+    public NbtList getInstructions() {return instructions;}
+    public void setNextInstruction(long nextInstruction) {this.nextInstruction = nextInstruction;}
+    public void advanceInstructionList() {instructions.add(instructions.remove(0));}
+
     private static int updateTicks = -1;
 
     public MotionInvokingBlockEntity(BlockPos pos, BlockState state) {
         super(Pirates.MOTION_INVOKING_BLOCK_ENTITY, pos, state);
     }
+
+
 
     public static void tick(World world, BlockPos pos, BlockState state, MotionInvokingBlockEntity be) {
 
@@ -74,13 +80,12 @@ public class MotionInvokingBlockEntity extends BlockEntity {
 
         }
         if (!world.isClient && world.getGameRules().getBoolean(Pirates.PIRATES_IS_LIVE_WORLD) && world.getTime() >= be.nextInstruction) {
-            DimensionIdProvider provider = (DimensionIdProvider) world;
 
             if (VSGameUtilsKt.isBlockInShipyard(world, pos)) {
 
 
                 ChunkPos chunkPos = world.getChunk(pos).getPos();
-                LoadedServerShip ship = (LoadedServerShip) ValkyrienSkiesMod.getVsCore().getHooks().getCurrentShipServerWorld().getLoadedShips().getByChunkPos(chunkPos.x, chunkPos.z, provider.getDimensionId());
+                LoadedServerShip ship = VSGameUtilsKt.getShipObjectManagingPos((ServerWorld) world, chunkPos);
 
                 //Pirates.LOGGER.info("scaling of ship: "+s.x()+" "+s.y()+" "+s.z());
 
@@ -194,49 +199,7 @@ public class MotionInvokingBlockEntity extends BlockEntity {
 
     }
 
-    private double vdis(double x, double xto)
-    {
-        if(x>xto)
-        {
-            return  x-xto;
-        }
-        else
-        {
-            return xto-x;
-        }
+    private double vdis(double x, double xto) {
+        return Math.abs(x-xto);
     }
-
-    private void moveShipForward(LoadedServerShip ship)
-    {
-        double mass = ship.getInertiaData().getMass();
-        Vector3d qdc = ship.getTransform().getShipToWorldRotation().getEulerAnglesZXY(new Vector3d()).mul(mass*100);
-        qdc = new Vector3d(qdc.x,0,qdc.z);
-        //qdc = qdc.rotateY(-Math.PI);
-        GameTickForceApplier gtfa = ship.getAttachment(GameTickForceApplier.class);
-        if(gtfa!=null)
-        {
-            Vector3d loc = new Vector3d(pos.getX()-1,pos.getY()+0.3,pos.getZ()-1).sub(ship.getTransform().getPositionInShip());
-            gtfa.applyInvariantForceToPos(qdc,loc);
-            //gtfa.applyInvariantForce(qdc);
-        }
-    }
-
-    private void utiliseInternalPattern(SeatedControllingPlayer seatedControllingPlayer, MotionInvokingBlockEntity be) {
-        String[] instruction = be.instructions.getString(0).split(" ");
-
-        if (seatedControllingPlayer == null) return;
-        switch (instruction[0]) {
-            case "forward" -> seatedControllingPlayer.setForwardImpulse(Float.parseFloat(instruction[1]));
-            case "left" -> seatedControllingPlayer.setLeftImpulse(Float.parseFloat(instruction[1]));
-            case "right" -> seatedControllingPlayer.setLeftImpulse(-Float.parseFloat(instruction[1]));
-            case "backwards" -> seatedControllingPlayer.setForwardImpulse(-Float.parseFloat(instruction[1]));
-            case "up" -> seatedControllingPlayer.setUpImpulse(Float.parseFloat(instruction[1]));
-            case "down" -> seatedControllingPlayer.setUpImpulse(-Float.parseFloat(instruction[1]));
-        }
-
-        be.nextInstruction = world.getTime() + Long.parseLong(instruction[2]);
-        be.instructions.add(be.instructions.remove(0));
-        be.markDirty();
-    }
-
 }

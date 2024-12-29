@@ -2,7 +2,7 @@ package ace.actually.pirates.blocks;
 
 import ace.actually.pirates.Pirates;
 import ace.actually.pirates.blocks.entity.CrewSpawnerBlockEntity;
-import ace.actually.pirates.util.CrewTypes;
+import ace.actually.pirates.entities.CrewTypes;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;

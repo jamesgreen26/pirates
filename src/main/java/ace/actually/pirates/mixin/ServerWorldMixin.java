@@ -1,6 +1,6 @@
 package ace.actually.pirates.mixin;
 
-import ace.actually.pirates.util.ShipStructurePlacementHelper;
+import ace.actually.pirates.structures.ShipStructurePlacementHelper;
 import kotlin.Triple;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.structure.StructureTemplate;
@@ -12,7 +12,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.BooleanSupplier;
 
-import static ace.actually.pirates.util.ShipStructurePlacementHelper.shipQueue;
+import static ace.actually.pirates.structures.ShipStructurePlacementHelper.shipQueue;
 
 @Mixin(ServerWorld.class)
 public abstract class ServerWorldMixin {
