@@ -65,30 +65,14 @@ public class PatternProcessor {
         }
     }
 
-    /**
-     * @deprecated ship patterns are planned for removal, will be replaced with proper ship ai
-     **/
-    @Deprecated
-    private void moveShipForward(LoadedServerShip ship, MotionInvokingBlockEntity be)
-    {
-        double mass = ship.getInertiaData().getMass();
-        Vector3d qdc = ship.getTransform().getShipToWorldRotation().getEulerAnglesZXY(new Vector3d()).mul(mass*100);
-        qdc = new Vector3d(qdc.x,0,qdc.z);
-        //qdc = qdc.rotateY(-Math.PI);
-        GameTickForceApplier gtfa = ship.getAttachment(GameTickForceApplier.class);
-        if(gtfa!=null)
-        {
-            Vector3d loc = new Vector3d(be.getPos().getX()-1,be.getPos().getY()+0.3,be.getPos().getZ()-1).sub(ship.getTransform().getPositionInShip());
-            gtfa.applyInvariantForceToPos(qdc,loc);
-            //gtfa.applyInvariantForce(qdc);
-        }
-    }
+
+
 
     /**
      * @deprecated ship patterns are planned for removal, will be replaced with proper ship ai
      **/
     @Deprecated
-    private void utiliseInternalPattern(SeatedControllingPlayer seatedControllingPlayer, MotionInvokingBlockEntity be) {
+    public static void utiliseInternalPattern(SeatedControllingPlayer seatedControllingPlayer, MotionInvokingBlockEntity be) {
         String[] instruction = be.getInstructions().getString(0).split(" ");
 
         if (seatedControllingPlayer == null) return;

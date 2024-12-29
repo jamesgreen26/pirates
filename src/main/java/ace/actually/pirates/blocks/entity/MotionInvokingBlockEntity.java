@@ -202,4 +202,19 @@ public class MotionInvokingBlockEntity extends BlockEntity {
     private double vdis(double x, double xto) {
         return Math.abs(x-xto);
     }
+
+    private void moveShipForward(LoadedServerShip ship)
+    {
+        double mass = ship.getInertiaData().getMass();
+        Vector3d qdc = ship.getTransform().getShipToWorldRotation().getEulerAnglesZXY(new Vector3d()).mul(mass*100);
+        qdc = new Vector3d(qdc.x,0,qdc.z);
+        //qdc = qdc.rotateY(-Math.PI);
+        GameTickForceApplier gtfa = ship.getAttachment(GameTickForceApplier.class);
+        if(gtfa!=null)
+        {
+            Vector3d loc = new Vector3d(pos.getX()-1,pos.getY()+0.3,pos.getZ()-1).sub(ship.getTransform().getPositionInShip());
+            gtfa.applyInvariantForceToPos(qdc,loc);
+            //gtfa.applyInvariantForce(qdc);
+        }
+    }
 }
