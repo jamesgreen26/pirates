@@ -19,7 +19,7 @@ import net.minecraft.world.World;
 
 public class ShotEntity extends ThrownItemEntity implements FlyingItemEntity {
     private LivingEntity in;
-    private float damage=1;
+    private float damage=6;
     private String extra="";
 
 
@@ -49,7 +49,7 @@ public class ShotEntity extends ThrownItemEntity implements FlyingItemEntity {
     protected void onCollision(HitResult hitResult) {
         super.onCollision(hitResult);
         if (!this.getWorld().isClient) {
-            this.getWorld().createExplosion(this, this.getX(), this.getY(), this.getZ(), 2.2f, false, World.ExplosionSourceType.BLOCK);
+            this.getWorld().createExplosion(this, this.getX(), this.getY(), this.getZ(), 2.2f, extra.contains("fire"), World.ExplosionSourceType.TNT);
             this.discard();
         }
     }
@@ -58,7 +58,11 @@ public class ShotEntity extends ThrownItemEntity implements FlyingItemEntity {
     protected void onEntityHit(EntityHitResult entityHitResult) {
         super.onEntityHit(entityHitResult);
         Entity entity = entityHitResult.getEntity();
-        entity.damage(this.getDamageSources().explosion(null), 6.0f);
+        entity.damage(this.getDamageSources().explosion(null), damage);
+        if (!this.getWorld().isClient) {
+            this.getWorld().createExplosion(this, this.getX(), this.getY(), this.getZ(), 2.2f, extra.contains("fire"), World.ExplosionSourceType.TNT);
+            this.discard();
+        }
     }
 
     @Override

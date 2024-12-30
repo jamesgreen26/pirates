@@ -1,41 +1,25 @@
 package ace.actually.pirates.blocks.entity;
 
-import ace.actually.pirates.blocks.MotionInvokingBlock;
 import ace.actually.pirates.util.ConfigUtils;
+import ace.actually.pirates.util.EurekaCompat;
 import ace.actually.pirates.util.PatternProcessor;
 import ace.actually.pirates.Pirates;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.BlockRotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import org.joml.Quaterniondc;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
-import org.joml.Vector3i;
 import org.valkyrienskies.core.api.ships.LoadedServerShip;
-import org.valkyrienskies.core.api.ships.ServerShip;
 import org.valkyrienskies.core.api.ships.Ship;
-import org.valkyrienskies.core.util.datastructures.DenseBlockPosSet;
 import org.valkyrienskies.eureka.block.ShipHelmBlock;
-import org.valkyrienskies.eureka.ship.EurekaShipControl;
-import org.valkyrienskies.eureka.util.ShipAssembler;
 import org.valkyrienskies.mod.api.SeatedControllingPlayer;
 import org.valkyrienskies.mod.common.VSGameUtilsKt;
-import org.valkyrienskies.mod.common.ValkyrienSkiesMod;
-import org.valkyrienskies.mod.common.assembly.ShipAssemblyKt;
-import org.valkyrienskies.mod.common.util.DimensionIdProvider;
 import org.valkyrienskies.mod.common.util.GameTickForceApplier;
-import org.valkyrienskies.mod.common.util.VectorConversionsMCKt;
-import org.valkyrienskies.mod.util.RelocationUtilKt;
 
 import java.util.List;
 
@@ -44,6 +28,12 @@ import static net.minecraft.state.property.Properties.HORIZONTAL_FACING;
 public class MotionInvokingBlockEntity extends BlockEntity {
     NbtList instructions = new NbtList();
     long nextInstruction = 0;
+    String compat = "Eureka";
+
+    //variables below this line aren't serialised because they don't need to be.
+    int[] target = new int[3]; //x,y,z of a point in space that the ship is "trying" to get to.
+    double ldx = -1; //last distance tracked along the x axis, from the target
+    double ldz = -1; //last distance tracked along the z axis, from the target
 
     public NbtList getInstructions() {return instructions;}
     public void setNextInstruction(long nextInstruction) {this.nextInstruction = nextInstruction;}
@@ -55,7 +45,10 @@ public class MotionInvokingBlockEntity extends BlockEntity {
         super(Pirates.MOTION_INVOKING_BLOCK_ENTITY, pos, state);
     }
 
-
+    public void setCompat(String compat) {
+        this.compat = compat;
+        markDirty();
+    }
 
     public static void tick(World world, BlockPos pos, BlockState state, MotionInvokingBlockEntity be) {
 
@@ -87,8 +80,6 @@ public class MotionInvokingBlockEntity extends BlockEntity {
                 ChunkPos chunkPos = world.getChunk(pos).getPos();
                 LoadedServerShip ship = VSGameUtilsKt.getShipObjectManagingPos((ServerWorld) world, chunkPos);
 
-                //Pirates.LOGGER.info("scaling of ship: "+s.x()+" "+s.y()+" "+s.z());
-
                 if (ship != null) {
                     SeatedControllingPlayer seatedControllingPlayer = ship.getAttachment(SeatedControllingPlayer.class);
                     if (seatedControllingPlayer == null) {
@@ -100,10 +91,6 @@ public class MotionInvokingBlockEntity extends BlockEntity {
                         ship.setAttachment(SeatedControllingPlayer.class, seatedControllingPlayer);
                     }
 
-
-                    //Pirates.LOGGER.info(be.instructions.getString(0));
-                    //be.utiliseInternalPattern(seatedControllingPlayer, be);
-                    //be.moveShipForward(ship);
                     if(world.getTimeOfDay()%updateTicks==0)
                     {
                         List<Ship> ships = VSGameUtilsKt.getAllShips(world).stream().filter(a->
@@ -120,7 +107,12 @@ public class MotionInvokingBlockEntity extends BlockEntity {
                         }
                     }
 
-                    be.moveTowards(seatedControllingPlayer,ship);
+                    switch (be.compat)
+                    {
+                        case "Eureka" -> EurekaCompat.moveTowards(be,seatedControllingPlayer,ship);
+                        default -> be.moveShipForward(ship);
+                    }
+
 
                 }
             }
@@ -133,6 +125,7 @@ public class MotionInvokingBlockEntity extends BlockEntity {
         nbt.putLong("nextInstruction", nextInstruction);
         nbt.put("instructions", instructions);
         nbt.putIntArray("target",target);
+        nbt.putString("compat",compat);
         super.writeNbt(nbt);
     }
 
@@ -141,6 +134,10 @@ public class MotionInvokingBlockEntity extends BlockEntity {
         super.readNbt(nbt);
         instructions = (NbtList) nbt.get("instructions");
         nextInstruction = nbt.getLong("nextInstruction");
+        if(nbt.contains("compat"))
+        {
+            compat = nbt.getString("compat");
+        }
         if(nbt.contains("target"))
         {
             target = nbt.getIntArray("target");
@@ -160,61 +157,44 @@ public class MotionInvokingBlockEntity extends BlockEntity {
         markDirty();
     }
 
-    int[] target = new int[3];
-    double ldx = -1;
-    double ldz = -1;
-    int flipflop = 1;
 
-    private void moveTowards(SeatedControllingPlayer power, LoadedServerShip ship)
-    {
-        if(target.length!=3) return;
 
-        power.setForwardImpulse(1);
-        Vector3dc v3d = ship.getTransform().getPositionInWorld();
-        if(ldx==-1)
-        {
-            //lastDistance = v3d.distanceSquared(target[0],target[1],target[2]);
-            ldx = vdis(target[0],v3d.x());
-            ldz = vdis(target[2],v3d.z());
-        }
-        else
-        {
-            //double currentDistance = v3d.distanceSquared(target[0],target[1],target[2]);
-            double cdx = vdis(target[0],v3d.x());
-            double cdz = vdis(target[2],v3d.z());
-            //System.out.println(lastDistance+" -> "+currentDistance);
-            if(cdx>=ldx || cdz>=ldz)
-            {
-                power.setLeftImpulse(flipflop);
-
-            }
-            else
-            {
-                power.setLeftImpulse(0);
-                flipflop = -flipflop;
-            }
-            ldx=cdx;
-            ldz=cdz;
-        }
-
+    public int[] getTarget() {
+        return target;
     }
 
-    private double vdis(double x, double xto) {
-        return Math.abs(x-xto);
+    public double getLdx() {
+        return ldx;
     }
 
+    public double getLdz() {
+        return ldz;
+    }
+
+    public void setLdx(double ldx) {
+        this.ldx = ldx;
+    }
+
+    public void setLdz(double ldz) {
+        this.ldz = ldz;
+    }
+
+
+    /**
+     * This method uses bases VS things to effectively create circles.
+     * the circles arent very good. TODO: Make the circles good
+     * @param ship
+     */
     private void moveShipForward(LoadedServerShip ship)
     {
         double mass = ship.getInertiaData().getMass();
-        Vector3d qdc = ship.getTransform().getShipToWorldRotation().getEulerAnglesZXY(new Vector3d()).mul(mass*100);
+        Vector3d qdc = ship.getTransform().getShipToWorldRotation().getEulerAnglesZXY(new Vector3d()).normalize().mul(mass*500);
         qdc = new Vector3d(qdc.x,0,qdc.z);
-        //qdc = qdc.rotateY(-Math.PI);
         GameTickForceApplier gtfa = ship.getAttachment(GameTickForceApplier.class);
         if(gtfa!=null)
         {
-            Vector3d loc = new Vector3d(pos.getX()-1,pos.getY()+0.3,pos.getZ()-1).sub(ship.getTransform().getPositionInShip());
+            Vector3d loc = new Vector3d(pos.getX(),pos.getY(),pos.getZ()).sub(ship.getTransform().getPositionInShip());
             gtfa.applyInvariantForceToPos(qdc,loc);
-            //gtfa.applyInvariantForce(qdc);
         }
     }
 }
