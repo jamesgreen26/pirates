@@ -32,8 +32,8 @@ public class MotionInvokingBlockEntity extends BlockEntity {
 
     //variables below this line aren't serialised because they don't need to be.
     int[] target = new int[3]; //x,y,z of a point in space that the ship is "trying" to get to.
-    double ldx = -1; //last distance tracked along the x axis, from the target
-    double ldz = -1; //last distance tracked along the z axis, from the target
+    double ldx = -1; //last distance tracked along the x-axis, from the target
+    double ldz = -1; //last distance tracked along the z-axis, from the target
 
     public NbtList getInstructions() {return instructions;}
     public void setNextInstruction(long nextInstruction) {this.nextInstruction = nextInstruction;}
@@ -157,7 +157,9 @@ public class MotionInvokingBlockEntity extends BlockEntity {
         markDirty();
     }
 
-
+    public String getCompat() {
+        return compat;
+    }
 
     public int[] getTarget() {
         return target;

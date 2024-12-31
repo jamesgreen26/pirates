@@ -2,12 +2,12 @@ package ace.actually.pirates.blocks;
 
 import ace.actually.pirates.Pirates;
 import ace.actually.pirates.blocks.entity.MotionInvokingBlockEntity;
+import ace.actually.pirates.util.EurekaCompat;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
@@ -21,7 +21,6 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import org.valkyrienskies.core.api.ships.LoadedServerShip;
-import org.valkyrienskies.mod.api.SeatedControllingPlayer;
 import org.valkyrienskies.mod.common.ValkyrienSkiesMod;
 import org.valkyrienskies.mod.common.util.DimensionIdProvider;
 
@@ -84,19 +83,21 @@ public class MotionInvokingBlock extends BlockWithEntity {
 
     private static void stopMotion(World world, BlockPos pos)
     {
-        DimensionIdProvider provider = (DimensionIdProvider) world;
-        ChunkPos chunkPos = world.getChunk(pos).getPos();
-        LoadedServerShip ship = (LoadedServerShip) ValkyrienSkiesMod.getVsCore().getHooks().getCurrentShipServerWorld().getLoadedShips().getByChunkPos(chunkPos.x, chunkPos.z, provider.getDimensionId());
-        if(ship!=null)
+        if(!world.isClient)
         {
-            SeatedControllingPlayer seatedControllingPlayer = ship.getAttachment(SeatedControllingPlayer.class);
-            if (seatedControllingPlayer == null) return;
-            seatedControllingPlayer.setLeftImpulse(0);
-            seatedControllingPlayer.setForwardImpulse(0);
-            seatedControllingPlayer.setCruise(false);
-            seatedControllingPlayer.setUpImpulse(0);
-            ship.setAttachment(SeatedControllingPlayer.class, seatedControllingPlayer);
+            DimensionIdProvider provider = (DimensionIdProvider) world;
+            ChunkPos chunkPos = world.getChunk(pos).getPos();
+            LoadedServerShip ship = (LoadedServerShip) ValkyrienSkiesMod.getVsCore().getHooks().getCurrentShipServerWorld().getLoadedShips().getByChunkPos(chunkPos.x, chunkPos.z, provider.getDimensionId());
+            if(ship!=null)
+            {
+                MotionInvokingBlockEntity be = (MotionInvokingBlockEntity) world.getBlockEntity(pos);
+                if(be.getCompat().equals("Eureka"))
+                {
+                    EurekaCompat.stopMotion(ship);
+                }
+            }
         }
+
 
     }
 }

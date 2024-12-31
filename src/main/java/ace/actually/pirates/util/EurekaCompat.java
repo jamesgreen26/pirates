@@ -41,6 +41,17 @@ public class EurekaCompat {
 
     }
 
+    public static void stopMotion(LoadedServerShip ship)
+    {
+        SeatedControllingPlayer seatedControllingPlayer = ship.getAttachment(SeatedControllingPlayer.class);
+        if (seatedControllingPlayer == null) return;
+        seatedControllingPlayer.setLeftImpulse(0);
+        seatedControllingPlayer.setForwardImpulse(0);
+        seatedControllingPlayer.setCruise(false);
+        seatedControllingPlayer.setUpImpulse(0);
+        ship.setAttachment(SeatedControllingPlayer.class, seatedControllingPlayer);
+    }
+
     private static double vdis(double x, double xto) {
         return Math.abs(x-xto);
     }
