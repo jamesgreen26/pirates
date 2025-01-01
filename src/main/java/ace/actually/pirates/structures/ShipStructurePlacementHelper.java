@@ -64,7 +64,7 @@ public class ShipStructurePlacementHelper {
                 Pirates.LOGGER.info("template cleanup failed.");
             }
 
-            newShip.setStatic(false);
+
         }
 
     }

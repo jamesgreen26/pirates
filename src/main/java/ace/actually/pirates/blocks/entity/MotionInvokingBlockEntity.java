@@ -58,6 +58,7 @@ public class MotionInvokingBlockEntity extends BlockEntity {
         if(updateTicks==-1)
         {
             updateTicks = Integer.parseInt(ConfigUtils.config.getOrDefault("controlled-ship-updates","100"));
+
         }
 
         if (be.instructions.isEmpty() && world.getGameRules().getBoolean(Pirates.PIRATES_IS_LIVE_WORLD)) {
@@ -80,7 +81,9 @@ public class MotionInvokingBlockEntity extends BlockEntity {
                 ChunkPos chunkPos = world.getChunk(pos).getPos();
                 LoadedServerShip ship = VSGameUtilsKt.getShipObjectManagingPos((ServerWorld) world, chunkPos);
 
+
                 if (ship != null) {
+                    ship.setStatic(false);
                     SeatedControllingPlayer seatedControllingPlayer = ship.getAttachment(SeatedControllingPlayer.class);
                     if (seatedControllingPlayer == null) {
                         if (world.getBlockState(pos.up()).getBlock() instanceof ShipHelmBlock) {

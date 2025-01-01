@@ -10,6 +10,12 @@ public class EurekaCompat {
     public static void moveTowards(MotionInvokingBlockEntity be, SeatedControllingPlayer power, LoadedServerShip ship)
     {
         if(be.getTarget().length!=3) return;
+        if(be.getTarget()[0]==0 && be.getTarget()[1]==0 && be.getTarget()[2]==0)
+        {
+            power.setForwardImpulse(1);
+            power.setLeftImpulse(1);
+            return;
+        }
 
         power.setForwardImpulse(1);
         Vector3dc v3d = ship.getTransform().getPositionInWorld();
