@@ -8,6 +8,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
@@ -16,7 +17,6 @@ import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import org.valkyrienskies.core.api.ships.LoadedServerShip;
 import org.valkyrienskies.core.api.ships.Ship;
-import org.valkyrienskies.eureka.block.ShipHelmBlock;
 import org.valkyrienskies.mod.api.SeatedControllingPlayer;
 import org.valkyrienskies.mod.common.VSGameUtilsKt;
 import org.valkyrienskies.mod.common.util.GameTickForceApplier;
@@ -52,7 +52,7 @@ public class MotionInvokingBlockEntity extends BlockEntity {
 
     public static void tick(World world, BlockPos pos, BlockState state, MotionInvokingBlockEntity be) {
 
-        if (!(world.getBlockState(pos.up()).getBlock() instanceof ShipHelmBlock)) {
+        if (be.compat.equals("Eureka") && EurekaCompat.isHelm(state)) {
             return;
         }
         if(updateTicks==-1)
@@ -85,12 +85,8 @@ public class MotionInvokingBlockEntity extends BlockEntity {
                 if (ship != null) {
                     ship.setStatic(false);
                     SeatedControllingPlayer seatedControllingPlayer = ship.getAttachment(SeatedControllingPlayer.class);
-                    if (seatedControllingPlayer == null) {
-                        if (world.getBlockState(pos.up()).getBlock() instanceof ShipHelmBlock) {
-                            seatedControllingPlayer = new SeatedControllingPlayer(world.getBlockState(pos.up()).get(HORIZONTAL_FACING).getOpposite());
-                        } else {
-                            return;
-                        }
+                    if (seatedControllingPlayer == null && be.compat.equals("Eureka")) {
+                        seatedControllingPlayer = new SeatedControllingPlayer(world.getBlockState(pos.up()).get(HORIZONTAL_FACING).getOpposite());
                         ship.setAttachment(SeatedControllingPlayer.class, seatedControllingPlayer);
                     }
 
@@ -193,13 +189,19 @@ public class MotionInvokingBlockEntity extends BlockEntity {
     private void moveShipForward(LoadedServerShip ship)
     {
         double mass = ship.getInertiaData().getMass();
-        Vector3d qdc = ship.getTransform().getShipToWorldRotation().getEulerAnglesZXY(new Vector3d()).normalize().mul(mass*500);
-        qdc = new Vector3d(qdc.x,0,qdc.z);
+        Vector3d qdc = ship.getTransform().getShipToWorldRotation().getEulerAnglesZXY(new Vector3d()).normalize().mul(mass*10);
+        qdc = new Vector3d(-qdc.x,0,-qdc.z);
         GameTickForceApplier gtfa = ship.getAttachment(GameTickForceApplier.class);
+
         if(gtfa!=null)
         {
-            Vector3d loc = new Vector3d(pos.getX(),pos.getY(),pos.getZ()).sub(ship.getTransform().getPositionInShip());
-            gtfa.applyInvariantForceToPos(qdc,loc);
+            Vector3dc v3dc = ship.getInertiaData().getCenterOfMassInShip();
+            Vector3d loc = new Vector3d(v3dc.x()+1,v3dc.y(),v3dc.z()+1);
+            //if(world instanceof ServerWorld serverWorld)
+            //{
+            //    serverWorld.spawnParticles(ParticleTypes.BUBBLE,loc.x,loc.y,loc.z,1,0,0,0,0);
+            //}
+            gtfa.applyInvariantForceToPos(qdc,loc.sub(ship.getTransform().getPositionInShip()));
         }
     }
 }

@@ -1,8 +1,10 @@
 package ace.actually.pirates.util;
 
 import ace.actually.pirates.blocks.entity.MotionInvokingBlockEntity;
+import net.minecraft.block.BlockState;
 import org.joml.Vector3dc;
 import org.valkyrienskies.core.api.ships.LoadedServerShip;
+import org.valkyrienskies.eureka.block.ShipHelmBlock;
 import org.valkyrienskies.mod.api.SeatedControllingPlayer;
 
 public class EurekaCompat {
@@ -60,5 +62,10 @@ public class EurekaCompat {
 
     private static double vdis(double x, double xto) {
         return Math.abs(x-xto);
+    }
+
+    public static boolean isHelm(BlockState state)
+    {
+        return state.getBlock() instanceof ShipHelmBlock;
     }
 }

@@ -4,6 +4,7 @@ import ace.actually.pirates.blocks.*;
 import ace.actually.pirates.blocks.entity.CannonPrimingBlockEntity;
 import ace.actually.pirates.blocks.entity.CrewSpawnerBlockEntity;
 import ace.actually.pirates.blocks.entity.MotionInvokingBlockEntity;
+import ace.actually.pirates.blocks.entity.StableBlockEntity;
 import ace.actually.pirates.entities.shot.ShotEntity;
 import ace.actually.pirates.entities.pirate_default.PirateEntity;
 import ace.actually.pirates.entities.pirate_skeleton.SkeletonPirateEntity;
@@ -105,12 +106,14 @@ public class Pirates implements ModInitializer {
 	public static final CannonPrimingBlock CANNON_PRIMING_BLOCK = new CannonPrimingBlock(AbstractBlock.Settings.copy(Blocks.DISPENSER).hardness(5));
 	public static final DispenserCannonBlock DISPENSER_CANNON_BLOCK = new DispenserCannonBlock(AbstractBlock.Settings.copy(Blocks.DISPENSER).hardness(5));
 	public static final CrewSpawnerBlock CREW_SPAWNER_BLOCK = new CrewSpawnerBlock(AbstractBlock.Settings.copy(Blocks.BIRCH_WOOD).noBlockBreakParticles().noCollision().dropsNothing().sounds(Silent));
+	public static final StableBlock STABLE_BLOCK = new StableBlock(AbstractBlock.Settings.create());
 	private void registerBlocks()
 	{
 		Registry.register(Registries.BLOCK,new Identifier("pirates","cannon_priming_block"),CANNON_PRIMING_BLOCK);
 		Registry.register(Registries.BLOCK,new Identifier("pirates","motion_invoking_block"),MOTION_INVOKING_BLOCK);
 		Registry.register(Registries.BLOCK,new Identifier("pirates","dispenser_cannon_block"),DISPENSER_CANNON_BLOCK);
 		Registry.register(Registries.BLOCK,new Identifier("pirates","crew_spawner_block"),CREW_SPAWNER_BLOCK);
+		Registry.register(Registries.BLOCK,new Identifier("pirates","stable_block"),STABLE_BLOCK);
 
 	}
 
@@ -124,6 +127,7 @@ public class Pirates implements ModInitializer {
 		Registry.register(Registries.ITEM,new Identifier("pirates","cannonball"),CANNONBALL);
 		Registry.register(Registries.ITEM,new Identifier("util_pirates","util_1"),CANNONBALL_ENT);
 		Registry.register(Registries.ITEM,new Identifier("pirates","ship_pointer"),SHIP_POINTER);
+		Registry.register(Registries.ITEM,new Identifier("pirates","stable_block"),new BlockItem(STABLE_BLOCK,new Item.Settings()));
 
 		Registry.register(Registries.ITEM,new Identifier("pirates","cannon_priming_block"),new BlockItem(CANNON_PRIMING_BLOCK,new Item.Settings()));
 
@@ -148,6 +152,11 @@ public class Pirates implements ModInitializer {
 			Registries.BLOCK_ENTITY_TYPE,
 			new Identifier("pirates", "crew_spawner_block_entity"),
 			FabricBlockEntityTypeBuilder.create(CrewSpawnerBlockEntity::new, CREW_SPAWNER_BLOCK).build()
+	);
+	public static final BlockEntityType<StableBlockEntity> STABLE_BLOCK_ENTITY = Registry.register(
+			Registries.BLOCK_ENTITY_TYPE,
+			new Identifier("pirates", "stable_block_entity"),
+			FabricBlockEntityTypeBuilder.create(StableBlockEntity::new, STABLE_BLOCK).build()
 	);
 
 

@@ -63,8 +63,9 @@ public class MotionInvokingBlock extends BlockWithEntity {
 
     @Override
     public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
-        super.onStateReplaced(state, world, pos, newState, moved);
         stopMotion(world,pos);
+        super.onStateReplaced(state, world, pos, newState, moved);
+
     }
 
     @Override
@@ -75,7 +76,6 @@ public class MotionInvokingBlock extends BlockWithEntity {
     public static void disarm(World world, BlockPos pos) {
         if (world.isClient()) return;
 
-        stopMotion(world,pos);
         world.setBlockState(pos, Blocks.SPRUCE_PLANKS.getDefaultState());
         world.playSound(null, pos, SoundEvents.BLOCK_BEACON_DEACTIVATE, SoundCategory.BLOCKS, 1, 0.95f);
 
