@@ -16,7 +16,7 @@ public class SpeedMixin {
     )
     protected void init(Vec3d velocity, CallbackInfo ci) {
         if (Math.abs(velocity.x) > 100.0 || Math.abs(velocity.y) > 100.0 || Math.abs(velocity.z) > 100.0) {
-            System.out.println("Tried to apply a velocity greater then 100 "+velocity.toString()+" to an entity! cancelling.");
+            System.out.println("Tried to apply a velocity greater then 100 "+ velocity +" to an entity! cancelling.");
             ci.cancel();
         }
 

@@ -4,6 +4,7 @@ import ace.actually.pirates.util.ConfigUtils;
 import ace.actually.pirates.util.EurekaCompat;
 import ace.actually.pirates.util.PatternProcessor;
 import ace.actually.pirates.Pirates;
+import net.fabricmc.fabric.api.datagen.v1.provider.FabricTagProvider;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.nbt.NbtCompound;
@@ -17,6 +18,8 @@ import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import org.valkyrienskies.core.api.ships.LoadedServerShip;
 import org.valkyrienskies.core.api.ships.Ship;
+import org.valkyrienskies.eureka.EurekaBlocks;
+import org.valkyrienskies.eureka.fabric.EurekaBlockTagsProvider;
 import org.valkyrienskies.mod.api.SeatedControllingPlayer;
 import org.valkyrienskies.mod.common.VSGameUtilsKt;
 import org.valkyrienskies.mod.common.util.GameTickForceApplier;
@@ -85,7 +88,8 @@ public class MotionInvokingBlockEntity extends BlockEntity {
                 if (ship != null) {
                     ship.setStatic(false);
                     SeatedControllingPlayer seatedControllingPlayer = ship.getAttachment(SeatedControllingPlayer.class);
-                    if (seatedControllingPlayer == null && be.compat.equals("Eureka")) {
+                    if (seatedControllingPlayer == null && be.compat.equals("Eureka") && world.getBlockState(pos.up()).contains(HORIZONTAL_FACING))
+                    {
                         seatedControllingPlayer = new SeatedControllingPlayer(world.getBlockState(pos.up()).get(HORIZONTAL_FACING).getOpposite());
                         ship.setAttachment(SeatedControllingPlayer.class, seatedControllingPlayer);
                     }

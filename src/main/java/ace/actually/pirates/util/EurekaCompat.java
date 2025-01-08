@@ -5,6 +5,7 @@ import net.minecraft.block.BlockState;
 import org.joml.Vector3dc;
 import org.valkyrienskies.core.api.ships.LoadedServerShip;
 import org.valkyrienskies.eureka.block.ShipHelmBlock;
+import org.valkyrienskies.eureka.ship.EurekaShipControl;
 import org.valkyrienskies.mod.api.SeatedControllingPlayer;
 
 public class EurekaCompat {
@@ -19,8 +20,28 @@ public class EurekaCompat {
             return;
         }
 
+
         power.setForwardImpulse(1);
         Vector3dc v3d = ship.getTransform().getPositionInWorld();
+
+        EurekaShipControl shipControl  = ship.getAttachment(EurekaShipControl.class);
+        if(shipControl!=null && shipControl.getBalloons()>0)
+        {
+            if(be.getTarget()[1]>v3d.y()-1)
+            {
+                power.setUpImpulse(1);
+            }
+            else if(be.getTarget()[1]<v3d.y()+1)
+            {
+                power.setUpImpulse(-1);
+            }
+            else
+            {
+                power.setUpImpulse(0);
+            }
+        }
+
+
         if(be.getLdx()==-1)
         {
             //lastDistance = v3d.distanceSquared(target[0],target[1],target[2]);
