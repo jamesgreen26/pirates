@@ -1,6 +1,5 @@
 package ace.actually.pirates.mixin.shipPlacement;
 
-import ace.actually.pirates.Pirates;
 import ace.actually.pirates.structures.ShipStructurePlacementHelper;
 import net.minecraft.structure.StructurePlacementData;
 import net.minecraft.structure.StructureTemplate;
@@ -24,20 +23,28 @@ public abstract class StructureTemplateMixin {
 
     @Inject(method = "place", at = @At("HEAD"), cancellable = true)
     public void placeMixin(ServerWorldAccess world, BlockPos pos, BlockPos pivot, StructurePlacementData placementData, Random random, int flags, CallbackInfoReturnable<Boolean> cir) {
-        if (VSGameUtilsKt.isBlockInShipyard(world.toServerWorld(), pos)) return;
+        try {
+            if (VSGameUtilsKt.isBlockInShipyard(world.toServerWorld(), pos)) return;
 
-        if (this.author.equals("pirate-ship")) {
-            ShipStructurePlacementHelper.placeShipTemplate(
-                    (StructureTemplate) (Object) this,
-                    world.toServerWorld(),
-                    pos);
+            if (this.author.equals("pirate-ship")) {
+                ShipStructurePlacementHelper.placeShipTemplate(
+                        (StructureTemplate) (Object) this,
+                        world.toServerWorld(),
+                        pos);
 
-            this.setAuthor("dirty");
-            cir.setReturnValue(true);
-            cir.cancel();
-        } else if (this.author.equals("dirty")) {
-            cir.setReturnValue(false);
-            cir.cancel();
+                this.setAuthor("dirty");
+                cir.setReturnValue(true);
+                cir.cancel();
+            } else if (this.author.equals("dirty")) {
+                cir.setReturnValue(false);
+                cir.cancel();
+            }
         }
+        catch (IllegalStateException ignored)
+        {
+
+        }
+
+
     }
 }
